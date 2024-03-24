@@ -150,7 +150,7 @@ def worker(q, s):
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
-        nonce_range = 2 ** 16
+        nonce_range = 2 ** int(sys.argv[5])
         
         last_nonce = nonce_range
         nonces = np.arange(nonce_range)
