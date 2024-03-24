@@ -149,14 +149,14 @@ def worker(q, s):
             cnv = block_major - 6
         print('New job with target: {}, RandomX, height: {}'.format(target, height), file = sys.stderr)
         target = struct.unpack('I', binascii.unhexlify(target))[0]
+        target = int(binascii.hexlify(target).decode("hex"), 16)
+        print(target)
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
         nonce_range = 2 ** int(sys.argv[5])
         
         last_nonce = nonce_range
         nonces = np.arange(nonce_range)
-        target = int(binascii.hexlify(target).decode("hex"), 16)
-        print(target)
         while True:
             bins  = pack_nonce(nonces)
             hashs = get_hash(bins) #pyrx.get_rx_hash(bin, seed_hash, height)
