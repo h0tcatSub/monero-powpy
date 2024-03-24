@@ -151,9 +151,10 @@ def worker(q, s):
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
         nonce_range = 2 ** 16
-        last_nonce = nonce_range
         
+        last_nonce = nonce_range
         nonces = np.arange(nonce_range)
+        
         while True:
             bins  = pack_nonce(nonces)
             hashs = get_hash(bins) #pyrx.get_rx_hash(bin, seed_hash, height)
@@ -165,6 +166,8 @@ def worker(q, s):
 
             found_nonce = np.any(r64s < target)
             found_nonce = np.isin(np.any(r64s < target), [True])
+
+            print(f"Last nonce : {last_nonce}")
             if found_nonce:
                 nonce_index = np.where(r64s < target)[0]
                 nonce = nonces[nonce_index]
@@ -188,13 +191,17 @@ def worker(q, s):
                 print('[yay!] Submitting hash: {}'.format(hex_hash), file = sys.stderr)
                 s.sendall(str(json.dumps(submit)+'\n').encode('utf-8'))
                 select.select([s], [], [], 3)
+
+                last_nonce = nonce_range
+                nonces = np.arange(nonce_range)
+                
                 if not q.empty():
                     break
             
-                nonces += nonce_range
-                last_nonce += nonce_range
-                print(f"Last nonce : {last_nonce}")
+            nonces += nonce_range
+            last_nonce += nonce_range
 
+            
 if __name__ == '__main__':
     pool_host = sys.argv[1]
     pool_port = int(sys.argv[2])
