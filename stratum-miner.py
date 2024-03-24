@@ -128,6 +128,8 @@ def worker(q, s):
     started = time.time()
     hash_count = 0
     global blob
+    global seed_hash
+    global height
     while 1:
         job = q.get()
         if job.get('login_id'):
