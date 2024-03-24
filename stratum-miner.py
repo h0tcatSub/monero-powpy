@@ -117,7 +117,8 @@ get_hash = np.vectorize(get_hash)
 
 def get_r64(hash):
     r64 = struct.unpack('Q', hash[24:])[0]
-    r64 = int(binascii.hexlify(r64).decode(), 16)
+    r64 = struct.unpack('I', binascii.unhexlify(r64))
+    print(r64)
     return r64
 get_r64 = np.vectorize(get_r64)
 
@@ -149,8 +150,6 @@ def worker(q, s):
             cnv = block_major - 6
         print('New job with target: {}, RandomX, height: {}'.format(target, height), file = sys.stderr)
         target = struct.unpack('I', binascii.unhexlify(target))[0]
-        print("test", target)
-        target = int(binascii.hexlify(target).decode("hex"), 16)
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
         nonce_range = 2 ** int(sys.argv[5])
