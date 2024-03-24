@@ -149,6 +149,7 @@ def worker(q, s):
             cnv = block_major - 6
         print('New job with target: {}, RandomX, height: {}'.format(target, height), file = sys.stderr)
         target = struct.unpack('I', binascii.unhexlify(target))[0]
+        print(target)
         target = int(binascii.hexlify(target).decode("hex"), 16)
         print(target)
         if target >> 32 == 0:
