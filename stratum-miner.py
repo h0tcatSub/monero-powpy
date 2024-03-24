@@ -155,7 +155,8 @@ def worker(q, s):
         
         last_nonce = nonce_range
         nonces = np.arange(nonce_range)
-        target = int(binascii.hexlify(target).decode(), 16)
+        target = int(binascii.hexlify(target).decode("hex"), 16)
+        print(target)
         while True:
             bins  = pack_nonce(nonces)
             hashs = get_hash(bins) #pyrx.get_rx_hash(bin, seed_hash, height)
