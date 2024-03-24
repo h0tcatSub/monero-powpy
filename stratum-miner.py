@@ -146,7 +146,7 @@ def worker(q, s):
         cnv = 0
         if block_major >= 7:
             cnv = block_major - 6
-        print('New job with target: {}, RandomX, height: {}'.format(target, height))
+        print('New job with target: {}, RandomX, height: {}'.format(target, height), file = sys.stderr)
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
@@ -172,7 +172,7 @@ def worker(q, s):
                 
                 elapsed = time.time() - started
                 hr = int(hash_count / elapsed)
-                print('{}Hashrate: {} H/s'.format(os.linesep, hr))
+                print('{}Hashrate: {} H/s'.format(os.linesep, hr), file = sys.stderr)
                 #if nicehash:
                 #    nonce = struct.unpack('I', bin[39:43])[0]
                 submit = {
@@ -185,15 +185,15 @@ def worker(q, s):
                     },
                     'id':1
                 }
-                print('[yay!] Submitting hash: {}'.format(hex_hash))
+                print('[yay!] Submitting hash: {}'.format(hex_hash), file = sys.stderr)
                 s.sendall(str(json.dumps(submit)+'\n').encode('utf-8'))
                 select.select([s], [], [], 3)
                 if not q.empty():
                     break
             
-            nonces += nonce_range
-            last_nonce += nonce_range
-            print(f"Last nonce : {last_nonce}")
+                nonces += nonce_range
+                last_nonce += nonce_range
+                print(f"Last nonce : {last_nonce}")
 
 if __name__ == '__main__':
     pool_host = sys.argv[1]
