@@ -117,7 +117,6 @@ get_hash = np.vectorize(get_hash)
 
 def get_r64(hash):
     #r64 = struct.unpack('Q', hash[24:])[0]
-    print(hash[24:])
     r64 = int(hash[24:], 16)
     return r64
 get_r64 = np.vectorize(get_r64)
@@ -165,9 +164,9 @@ def worker(q, s):
             hex_hashs = get_hex_hashs(hashs)
             r64s = get_r64(hex_hashs)
 
+            print(r64s[len(r64s) - 1], target)
             found_nonce = np.any(r64s < target)
             found_nonce = np.isin(np.any(r64s < target), [True])
-            print(r64s)
             print(f"Last nonce : {last_nonce}")
             if found_nonce:
                 nonce_index = np.where(r64s < target)[0]
