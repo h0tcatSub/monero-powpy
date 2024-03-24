@@ -130,6 +130,7 @@ def worker(q, s):
     global blob
     global seed_hash
     global height
+
     while 1:
         job = q.get()
         if job.get('login_id'):
