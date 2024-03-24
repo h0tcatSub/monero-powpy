@@ -149,7 +149,7 @@ def worker(q, s):
             cnv = block_major - 6
         print('New job with target: {}, RandomX, height: {}'.format(target, height), file = sys.stderr)
         target = struct.unpack('I', binascii.unhexlify(target))[0]
-        print(target)
+        print("test", target)
         target = int(binascii.hexlify(target).decode("hex"), 16)
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
