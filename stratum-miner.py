@@ -117,8 +117,7 @@ get_hash = np.vectorize(get_hash)
 
 def get_r64(hash):
     #r64 = struct.unpack('Q', hash[24:])[0]
-    print(hash[24:].hex())
-    r64 = struct.unpack('Q', hash[24:])[0]
+    r64 = int(hash[24:].hex(), 16)
     return r64
 get_r64 = np.vectorize(get_r64)
 
