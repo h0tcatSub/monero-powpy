@@ -131,7 +131,7 @@ def worker(q, s):
     global seed_hash
     global height
 
-    while 1:
+    while True:
         job = q.get()
         if job.get('login_id'):
             login_id = job.get('login_id')
@@ -145,6 +145,7 @@ def worker(q, s):
         if block_major >= 7:
             cnv = block_major - 6
         seed_hash = binascii.unhexlify(job.get('seed_hash'))
+        print(seed_hash)
         print('New job with target: {}, RandomX, height: {}'.format(target, height))
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
