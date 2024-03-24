@@ -27,25 +27,23 @@
 #  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
 import socket
 import select
 import binascii
-import pycryptonight
 import pyrx
 import struct
 import json
 import sys
 import os
 import time
+import numpy as np
 from multiprocessing import Process, Queue
 
-
-pool_host = 'monerop.com'
-pool_port = 4242
-pool_pass = 'xx'
-wallet_address = '42ydzcV2cJxGzKpmZMbsmtahZUhprCspgP9pBYoDk5F5HGUYTCBY3Sn83zTcm5yYeVPYsvikWim35ZajZqo5ReBPFg2CF79'
-nicehash = False
+pool_host = None 
+pool_port = None 
+pool_pass = None
+blob = None
+wallet_address = None
 
 
 def main():
@@ -69,7 +67,6 @@ def main():
         'id':1
     }
     print('Logging into pool: {}:{}'.format(pool_host, pool_port))
-    print('Using NiceHash mode: {}'.format(nicehash))
     s.sendall(str(json.dumps(login)+'\n').encode('utf-8'))
 
     try:
@@ -98,23 +95,39 @@ def main():
         s.close()
         sys.exit(0)
 
-
-def pack_nonce(blob, nonce):
+def pack_nonce(nonce):
+    global blob
     b = binascii.unhexlify(blob)
     bin = struct.pack('39B', *bytearray(b[:39]))
-    if nicehash:
-        bin += struct.pack('I', nonce & 0x00ffffff)[:3]
-        bin += struct.pack('{}B'.format(len(b)-42), *bytearray(b[42:]))
-    else:
-        bin += struct.pack('I', nonce)
-        bin += struct.pack('{}B'.format(len(b)-43), *bytearray(b[43:]))
+    bin += struct.pack('I', nonce)
+    bin += struct.pack('{}B'.format(len(b)-43), *bytearray(b[43:]))
     return bin
 
+pack_nonce = np.vectorize(pack_nonce)
+
+seed_hash = None
+height    = None
+
+def get_hash(bin):
+    global seed_hash
+    global height
+    hash = pyrx.get_rx_hash(bin, seed_hash, height)
+    return hash
+get_hash = np.vectorize(get_hash)
+
+def get_r64():
+    r64 = struct.unpack('Q', hash[24:])[0]
+    return r64
+get_r64 = np.vectorize(get_r64)
+
+def get_hex_hashs(hash):
+    return binascii.hexlify(hash).decode()
+get_hex_hashs = np.vectorize(get_hex_hashs)
 
 def worker(q, s):
     started = time.time()
     hash_count = 0
-
+    global blob
     while 1:
         job = q.get()
         if job.get('login_id'):
@@ -128,33 +141,36 @@ def worker(q, s):
         cnv = 0
         if block_major >= 7:
             cnv = block_major - 6
-        if cnv > 5:
-            seed_hash = binascii.unhexlify(job.get('seed_hash'))
-            print('New job with target: {}, RandomX, height: {}'.format(target, height))
-        else:
-            print('New job with target: {}, CNv{}, height: {}'.format(target, cnv, height))
+        seed_hash = binascii.unhexlify(job.get('seed_hash'))
+        print('New job with target: {}, RandomX, height: {}'.format(target, height))
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
-        nonce = 1
-
-        while 1:
-            bin = pack_nonce(blob, nonce)
-            if cnv > 5:
-                hash = pyrx.get_rx_hash(bin, seed_hash, height)
-            else:
-                hash = pycryptonight.cn_slow_hash(bin, cnv, 0, height)
-            hash_count += 1
+        nonce_range = 2 ** 16
+        last_nonce = nonce_range
+        
+        nonces = np.arange(nonce_range)
+        while True:
+            bins  = pack_nonce(nonces)
+            hashs = get_hash(bins) #pyrx.get_rx_hash(bin, seed_hash, height)
+            hash_count += last_nonce
             sys.stdout.write('.')
             sys.stdout.flush()
-            hex_hash = binascii.hexlify(hash).decode()
-            r64 = struct.unpack('Q', hash[24:])[0]
-            if r64 < target:
+            hex_hashs = get_hex_hashs(hashs)
+            r64s = get_r64(hashs)
+
+            found_nonce = np.any(r64s < target)
+            found_nonce = np.isin(np.any(r64s < target), [True])
+            if found_nonce:
+                nonce_index = np.where(r64s < target)[0]
+                nonce = nonces[nonce_index]
+                hex_hash = hex_hashs[nonce_index]
+                
                 elapsed = time.time() - started
                 hr = int(hash_count / elapsed)
                 print('{}Hashrate: {} H/s'.format(os.linesep, hr))
-                if nicehash:
-                    nonce = struct.unpack('I', bin[39:43])[0]
+                #if nicehash:
+                #    nonce = struct.unpack('I', bin[39:43])[0]
                 submit = {
                     'method':'submit',
                     'params': {
@@ -165,24 +181,22 @@ def worker(q, s):
                     },
                     'id':1
                 }
-                print('Submitting hash: {}'.format(hex_hash))
+                print('[yay!] Submitting hash: {}'.format(hex_hash))
                 s.sendall(str(json.dumps(submit)+'\n').encode('utf-8'))
                 select.select([s], [], [], 3)
                 if not q.empty():
                     break
-            nonce += 1
+            
+            nonces += nonce_range
+            last_nonce += nonce_range
+            print(f"Last nonce : {last_nonce}")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--nicehash', action='store_true', help='NiceHash mode')
-    parser.add_argument('--host', action='store', help='Pool host')
-    parser.add_argument('--port', action='store', help='Pool port')
-    args = parser.parse_args()
-    if args.nicehash:
-        nicehash = True
-    if args.host:
-        pool_host = args.host
-    if args.port:
-        pool_port = int(args.port)
+    pool_host = sys.argv[1]
+    pool_port = int(sys.argv[2])
+    pool_pass = sys.argv[3]
+
+    wallet_address = sys.argv[4]
+
     main()
 
