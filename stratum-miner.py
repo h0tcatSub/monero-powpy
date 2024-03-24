@@ -115,7 +115,7 @@ def get_hash(bin):
     return hash
 get_hash = np.vectorize(get_hash)
 
-def get_r64():
+def get_r64(hash):
     r64 = struct.unpack('Q', hash[24:])[0]
     return r64
 get_r64 = np.vectorize(get_r64)
@@ -135,7 +135,6 @@ def worker(q, s):
         job = q.get()
 
         seed_hash = binascii.unhexlify(job.get('seed_hash'))
-        print(seed_hash)
         if job.get('login_id'):
             login_id = job.get('login_id')
             print('Login ID: {}'.format(login_id))
