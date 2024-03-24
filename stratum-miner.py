@@ -112,11 +112,13 @@ def get_hash(bin):
     global seed_hash
     global height
     hash = pyrx.get_rx_hash(bin, seed_hash, height)
+    print(hash)
     return hash
 get_hash = np.vectorize(get_hash)
 
 def get_r64(hash):
     r64 = struct.unpack('Q', hash[24:])[0]
+    print(r64)
     return r64
 get_r64 = np.vectorize(get_r64)
 
@@ -158,7 +160,7 @@ def worker(q, s):
         while True:
             bins  = pack_nonce(nonces)
             hashs = get_hash(bins) #pyrx.get_rx_hash(bin, seed_hash, height)
-            hash_count += last_nonce
+            hash_count += nonce_range
             sys.stdout.write('.')
             sys.stdout.flush()
             hex_hashs = get_hex_hashs(hashs)
