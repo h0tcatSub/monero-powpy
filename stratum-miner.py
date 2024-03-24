@@ -117,7 +117,8 @@ get_hash = np.vectorize(get_hash)
 
 def get_r64(hash):
     #r64 = struct.unpack('Q', hash[24:])[0]
-    r64 = int(hash[24:].hex(), 16)
+    print(hash[24:])
+    r64 = int(hash[24:], 16)
     return r64
 get_r64 = np.vectorize(get_r64)
 
@@ -162,7 +163,7 @@ def worker(q, s):
             sys.stdout.write('.')
             sys.stdout.flush()
             hex_hashs = get_hex_hashs(hashs)
-            r64s = get_r64(hashs)
+            r64s = get_r64(hex_hashs)
 
             found_nonce = np.any(r64s < target)
             found_nonce = np.isin(np.any(r64s < target), [True])
