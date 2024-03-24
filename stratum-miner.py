@@ -166,7 +166,7 @@ def worker(q, s):
 
             found_nonce = np.any(r64s < target)
             found_nonce = np.isin(np.any(r64s < target), [True])
-
+            print(r64s)
             print(f"Last nonce : {last_nonce}")
             if found_nonce:
                 nonce_index = np.where(r64s < target)[0]
