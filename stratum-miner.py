@@ -151,7 +151,6 @@ def worker(q, s):
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         print(target)
         target = int(binascii.hexlify(target).decode("hex"), 16)
-        print(target)
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
         nonce_range = 2 ** int(sys.argv[5])
