@@ -89,10 +89,12 @@ def decode_hash(hash):
     return binascii.hexlify(hash).decode()
 
 target = None
-def unpack_hash(hash):
+def find_hash(hash):
     global target
     return struct.unpack('Q', hash[24:])[0] < target
 
+def create_r64(hash):
+    return struct.unpack('Q', hash[24:])[0]
 def make_hash(bin):
     return pyrx.get_rx_hash(bin, seed_hash, height)
 
@@ -132,12 +134,13 @@ def worker(q, s):
             hash_count += range_bits
             print(f"Progress : {hash_count}", end="\r")
             hex_hash = map(decode_hash, hash)
-            r64 = map(unpack_hash, hash)
+            r64 = map(find_hash, hash)
             found_nonce = all(r64)
             if found_nonce: #r64 < target:
                 elapsed = time.time() - started
                 hr = int(hash_count / elapsed)
                 print('{}Hashrate: {} H/s'.format(os.linesep, hr))
+                r64 = map(create_r64, hash)
                 r64 = list(r64)
                 hex_hash - list(hex_hash)
                 found_nonce_index = np.where(r64  < target)[0][0]
