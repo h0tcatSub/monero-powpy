@@ -130,8 +130,7 @@ def worker(q, s):
             #else:
             #    hash = map(pycryptonight.cn_slow_hash, bins, cnv, 0, height)
             hash_count += range_bits
-            sys.stdout.write('.')
-            sys.stdout.flush()
+            print(f"Progress : {hash_count}", end="\r")
             hex_hash = map(decode_hash, hash)
             r64 = map(unpack_hash, hash)
             found_nonce = all(r64)
