@@ -146,6 +146,8 @@ def worker(q, s):
                 hex_hash = list(hex_hash)
                 found_nonce_index = np.where(r64  < target)[0][0]
                 nonce = found_nonce_index + progress
+                print(f"nonce : {nonce}")
+                print("Submitting nonce")
                 hex_hash = hex_hash[found_nonce_index]
                 if nicehash:
                     nonce = struct.unpack('I', bins[39:43])[0]
