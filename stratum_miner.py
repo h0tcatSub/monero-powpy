@@ -16,7 +16,7 @@ from multiprocessing import Process, Queue
 pool_host = 'monerop.com'
 pool_port = 4242
 pool_pass = 'xx'
-wallet_address = ''
+wallet_address = '45mdKwTvLemjUiAktUhMPofuc7dxNLJWbReJJ3ZTYXkt6ca6tQ8MCNzdSc1fk1cx1jYeVMz9BZ6ftfwzE1AEDUnxTCVwsMU'
 nicehash = False
 
 
@@ -119,14 +119,14 @@ def worker(q, s):
         while 1:
             bins = map(pack_nonce, blob, nonces)
             if cnv > 5:
-                hash = map(pyrx.get_rx_hash, bins, seed_hash, height)
+                hash = map(pyrx.get_rx_hash, bins, *(seed_hash, height))
             #else:
             #    hash = map(pycryptonight.cn_slow_hash, bins, cnv, 0, height)
             hash_count += range_bits
             sys.stdout.write('.')
             sys.stdout.flush()
             hex_hash = map(decode_hash, hash)
-            r64 = map(unpack_hash, hash, target)
+            r64 = map(unpack_hash, hash, *(target))
             found_nonce = all(r64)
             if found_nonce: #r64 < target:
                 elapsed = time.time() - started
