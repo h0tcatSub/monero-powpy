@@ -88,7 +88,12 @@ def decode_hash(hash):
 def unpack_hash(hash, target):
     return struct.unpack('Q', hash[24:])[0] < target
 
+global seed_hash, height
+def make_hash(bin):
+    return pyrx.get_rx_hash(bin, seed_hash, height)
+
 def worker(q, s):
+    global seed_hash, height
     started = time.time()
     hash_count = 0
 
@@ -119,14 +124,14 @@ def worker(q, s):
         while 1:
             bins = map(pack_nonce, blob, nonces)
             if cnv > 5:
-                hash = map(pyrx.get_rx_hash, bins, *(seed_hash, height))
+                hash = map(make_hash, bins)#bins, *(seed_hash, height))
             #else:
             #    hash = map(pycryptonight.cn_slow_hash, bins, cnv, 0, height)
             hash_count += range_bits
             sys.stdout.write('.')
             sys.stdout.flush()
             hex_hash = map(decode_hash, hash)
-            r64 = map(unpack_hash, hash, *(target))
+            r64 = map(unpack_hash, hash, target)
             found_nonce = all(r64)
             if found_nonce: #r64 < target:
                 elapsed = time.time() - started
