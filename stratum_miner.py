@@ -123,7 +123,7 @@ def worker(q, s):
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
-        range_bits = 2 ** 20
+        range_bits = 2 ** 17
         progress = 0
         nonces = range(1, range_bits)
         while 1:
@@ -135,16 +135,17 @@ def worker(q, s):
             print(f"Progress : {hash_count}", end="\r")
             hex_hash = map(decode_hash, hash)
             r64 = map(find_hash, hash)
-            found_nonce = not all(r64)
-            if found_nonce: #r64 < target:
+            processing_nonce = all(r64)
+            if not processing_nonce: #r64 < target:
+                print()
                 elapsed = time.time() - started
                 hr = int(hash_count / elapsed)
-                print("FOUND NONCE!!")
+                print("[+] FOUND NONCE!!")
                 print('{}Hashrate: {} H/s'.format(os.linesep, hr))
-                r64 = map(create_r64, hash)
+                r64 = list(map(create_r64, hash))
                 print("Creating R64...")
-                r64 = list(r64)
-                hex_hash = list(hex_hash)
+                #r64 = list(r64)
+                hex_hash =  list(hex_hash)
                 found_nonce_index = np.where(r64  < target)[0][0]
                 nonce = found_nonce_index + progress
                 print(f"nonce : {nonce}")
