@@ -71,7 +71,10 @@ def main():
         sys.exit(0)
 
 
-def pack_nonce(blob, nonce):
+global seed_hash, height, blob
+
+def pack_nonce(nonce):
+    global blob
     b = binascii.unhexlify(blob)
     bin = struct.pack('39B', *bytearray(b[:39]))
     if nicehash:
@@ -90,12 +93,11 @@ def unpack_hash(hash):
     global target
     return struct.unpack('Q', hash[24:])[0] < target
 
-global seed_hash, height
 def make_hash(bin):
     return pyrx.get_rx_hash(bin, seed_hash, height)
 
 def worker(q, s):
-    global seed_hash, height, target
+    global seed_hash, height, target,blob
     started = time.time()
     hash_count = 0
 
@@ -124,7 +126,7 @@ def worker(q, s):
         progress = 0
         nonces = range(1, range_bits)
         while 1:
-            bins = map(pack_nonce, blob, nonces)
+            bins = map(pack_nonce, nonces)
             if cnv > 5:
                 hash = map(make_hash, bins)#bins, *(seed_hash, height))
             #else:
