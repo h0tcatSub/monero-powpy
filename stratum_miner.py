@@ -114,9 +114,8 @@ def worker(q, s):
         cnv = 0
         if block_major >= 7:
             cnv = block_major - 6
-        if cnv > 5:
-            seed_hash = binascii.unhexlify(job.get('seed_hash'))
-            print('New job with target: {}, RandomX, height: {}'.format(target, height))
+        seed_hash = binascii.unhexlify(job.get('seed_hash'))
+        print('New job with target: {}, RandomX, height: {}'.format(target, height))
         #else:
         #    print('New job with target: {}, CNv{}, height: {}'.format(target, cnv, height))
         target = struct.unpack('I', binascii.unhexlify(target))[0]
