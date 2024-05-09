@@ -91,7 +91,7 @@ def decode_hash(hash):
 target = None
 def find_hash(hash):
     global target
-    return struct.unpack('Q', hash[24:])[0] < target
+    return (struct.unpack('Q', hash[24:])[0] - target) < 0
 
 def create_r64(hash):
     return struct.unpack('Q', hash[24:])[0]
@@ -135,7 +135,7 @@ def worker(q, s):
             print(f"Progress : {hash_count}", end="\r")
             hex_hash = map(decode_hash, hash)
             r64 = map(find_hash, hash)
-            found_nonce = all(r64)
+            found_nonce = not all(r64)
             if found_nonce: #r64 < target:
                 elapsed = time.time() - started
                 hr = int(hash_count / elapsed)
