@@ -26,9 +26,9 @@
 #  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 #  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  
+import numpy as np  
 import binascii
-import pycryptonight
+#import pycryptonight
 import pyrx
 import struct
 import requests
@@ -41,16 +41,20 @@ import time
 rpc_url = 'http://testnet.xmrchain.net:28081/json_rpc'
 wallet_address = '9tiLRM5cuFhFazKELdWJNbEqHC8uENobkLaomgufKHpZL3zsPdp9aU2PJJAaKe9RKHRFQaWjrNaaTBduuTooJZga6kT77m1'
 
-
-def pack_nonce(blob, nonce):
-    b = binascii.unhexlify(blob)
+bhb = None
+def pack_nonce(nonce):
+    global bhb
+    b = binascii.unhexlify(bhb)
     bin = struct.pack('39B', *bytearray(b[:39]))
     bin += struct.pack('I', nonce)
     bin += struct.pack('{}B'.format(len(b)-43), *bytearray(b[43:]))
     return bin
 
+def reverse_hash(hash):
+    return hash[::-1]
 
 def main():
+    global bhb
     base_diff = 2**256-1
     payload = {
             'jsonrpc':'2.0',
@@ -76,27 +80,28 @@ def main():
     if cnv > 5:
         seed_hash = binascii.unhexlify(result.get('seed_hash'))
 
-    nonce = 1
+    range_bits = 2 ** 20
+    nonces = range(1, range_bits)
     hash_count = 0
     started = time.time()
     print('Mining for a valid hash')
+    progress = 1
     try:
         while 1:
-            bin = pack_nonce(bhb, nonce)
-            if cnv > 5:
-                hash = pyrx.get_rx_hash(bin, seed_hash, height)
-            else:
-                hash = pycryptonight.cn_slow_hash(bin, cnv, 0, height)
-            hash = hash[::-1]
-            hash_count += 1
+            bin = map(pack_nonce, (bhb, nonces))
+            hash = map(pyrx.get_rx_hash, bin, seed_hash, height)
+            hash = map(reverse_hash, hash)
+            hash_count += range_bits
             sys.stdout.write('.')
             sys.stdout.flush()
-            hex_hash = binascii.hexlify(hash)
-
-            if base_diff / int(hex_hash, 16) >= diff:
+            hex_hash = map(binascii.hexlify, hash)
+            found_nonce = any(map(lambda d: base_diff / int(d, 16) >= diff, hex_hash))
+            if any(found_nonce):
                 break
             else:
-                nonce += 1
+                progress += range_bits
+                nonces = range(progress, progress + range_bits)
+                #nonce += range_bits
     except KeyboardInterrupt:
         print('{}Aborting'.format(os.linesep))
         sys.exit(-1)
@@ -104,8 +109,13 @@ def main():
     elapsed = time.time() - started
     hr = int(hash_count / elapsed)
     print('{}Hashrate: {} H/s'.format(os.linesep, hr))
-    print('Found a valid hash: {}'.format(hex_hash.decode()))
 
+    hex_hash = np.array(list(hex_hash))
+    hex_hash_index = np.where((base_diff / int(hex_hash, 16)) >= diff)
+    hex_hash = hex_hash[hex_hash_index]
+    nonce = hex_hash_index + progress
+    print('Found a valid hash: {}'.format(hex_hash.decode()))
+    print(f'Nonce : {nonce}')
     btb = binascii.hexlify(pack_nonce(btb, nonce))
     payload = {
             'jsonrpc':'2.0',
