@@ -32,6 +32,8 @@ import socket
 import select
 import binascii
 import numpy as np  
+import pycryptonight
+
 import pyrx
 import struct
 import json
@@ -148,8 +150,8 @@ def worker(q, s):
             bins = map(pack_nonce, blob, nonces)
             if cnv > 5:
                 hash = map(pyrx.get_rx_hash, bins, seed_hash, height)
-            #else:
-            #    hash = pycryptonight.cn_slow_hash(bin, cnv, 0, height)
+            else:
+                hash = map(pycryptonight.cn_slow_hash, bins, cnv, 0, height)
             hash_count += range_bits
             sys.stdout.write('.')
             sys.stdout.flush()
