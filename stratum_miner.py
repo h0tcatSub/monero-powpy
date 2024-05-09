@@ -139,7 +139,7 @@ def worker(q, s):
             if found_nonce: #r64 < target:
                 elapsed = time.time() - started
                 hr = int(hash_count / elapsed)
-                print("WOW")
+                print("FOUND NONCE!!")
                 print('{}Hashrate: {} H/s'.format(os.linesep, hr))
                 r64 = map(create_r64, hash)
                 r64 = list(r64)
