@@ -85,7 +85,9 @@ def pack_nonce(blob, nonce):
 def decode_hash(hash):
     return binascii.hexlify(hash).decode()
 
-def unpack_hash(hash, target):
+target = None
+def unpack_hash(hash):
+    global target
     return struct.unpack('Q', hash[24:])[0] < target
 
 global seed_hash, height
@@ -93,7 +95,7 @@ def make_hash(bin):
     return pyrx.get_rx_hash(bin, seed_hash, height)
 
 def worker(q, s):
-    global seed_hash, height
+    global seed_hash, height, target
     started = time.time()
     hash_count = 0
 
@@ -131,7 +133,7 @@ def worker(q, s):
             sys.stdout.write('.')
             sys.stdout.flush()
             hex_hash = map(decode_hash, hash)
-            r64 = map(unpack_hash, hash, target)
+            r64 = map(unpack_hash, hash)
             found_nonce = all(r64)
             if found_nonce: #r64 < target:
                 elapsed = time.time() - started
