@@ -142,11 +142,11 @@ def worker(q, s):
                 hr = int(hash_count / elapsed)
                 print("[+] FOUND NONCE!!")
                 print('{}Hashrate: {} H/s'.format(os.linesep, hr))
-                r64 = list(map(create_r64, hash))
                 print("Creating R64...")
+                r64 = list(map(create_r64, hash))
                 #r64 = list(r64)
                 hex_hash =  list(hex_hash)
-                found_nonce_index = np.where(r64  < target)[0][0]
+                found_nonce_index = np.where(r64  < target)[0][0] + progress
                 nonce = found_nonce_index + progress
                 print(f"nonce : {nonce}")
                 print("Submitting nonce")
