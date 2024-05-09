@@ -104,7 +104,7 @@ def worker(q, s):
     started = time.time()
     hash_count = 0
 
-    while 1:
+    while True:
         job = q.get()
         if job.get('login_id'):
             login_id = job.get('login_id')
@@ -127,7 +127,8 @@ def worker(q, s):
             #else:
             #    hash = map(pycryptonight.cn_slow_hash, bins, cnv, 0, height)
             hash_count += range_bits
-            print(f"Progress : {hash_count}", end="\r")
+            sys.stdout.write(f"Progress : {hash_count} \r")
+            sys.stdout.flush()
             hex_hash = map(decode_hash, hash)
             r64 = map(find_hash, hash)
             found_nonce = any(r64)
