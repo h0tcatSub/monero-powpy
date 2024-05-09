@@ -94,6 +94,7 @@ def find_hash(hash):
     return (struct.unpack('Q', hash[24:])[0] - target) < 0
 
 def create_r64(hash):
+    print(struct.unpack('Q', hash[24:])[0])
     return struct.unpack('Q', hash[24:])[0]
 def make_hash(bin):
     return pyrx.get_rx_hash(bin, seed_hash, height)
@@ -123,7 +124,7 @@ def worker(q, s):
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
-        range_bits = 2 ** 17
+        range_bits = 2 ** 20
         progress = 0
         nonces = range(1, range_bits)
         while 1:
