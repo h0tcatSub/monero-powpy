@@ -125,11 +125,9 @@ def worker(q, s):
         range_bits = 2 ** 20
         progress = 0
         nonces = range(1, range_bits)
-        hash = None
         while 1:
             bins = map(pack_nonce, nonces)
-            if cnv > 5:
-                hash = map(make_hash, bins)#bins, *(seed_hash, height))
+            hash = map(make_hash, bins)#bins, *(seed_hash, height))
             #else:
             #    hash = map(pycryptonight.cn_slow_hash, bins, cnv, 0, height)
             hash_count += range_bits
