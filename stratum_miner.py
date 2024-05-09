@@ -113,14 +113,8 @@ def worker(q, s):
         target = job.get('target')
         job_id = job.get('job_id')
         height = job.get('height')
-        block_major = int(blob[:2], 16)
-        cnv = 0
-        if block_major >= 7:
-            cnv = block_major - 6
         seed_hash = binascii.unhexlify(job.get('seed_hash'))
         print('New job with target: {}, RandomX, height: {}'.format(target, height))
-        #else:
-        #    print('New job with target: {}, CNv{}, height: {}'.format(target, cnv, height))
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
@@ -136,22 +130,30 @@ def worker(q, s):
             print(f"Progress : {hash_count}", end="\r")
             hex_hash = map(decode_hash, hash)
             r64 = map(find_hash, hash)
-            processing_nonce = all(r64)
-            if not processing_nonce: #r64 < target:
+            found_nonce = any(r64)
+            if found_nonce: #r64 < target:
                 print()
                 elapsed = time.time() - started
                 hr = int(hash_count / elapsed)
                 print("[+] FOUND NONCE!!")
                 print('{}Hashrate: {} H/s'.format(os.linesep, hr))
-                print("Creating R64...")
-                r64 = list(map(create_r64, hash))
+                print("Checking Hash...")
+                #r64 = list(map(create_r64, hash))
+                r64 = list(r64)
+                nonce = r64.index(True) + progress
+                bin = pack_nonce(nonce)
+                hex_hash = pyrx.get_rx_hash(bin, seed_hash, height)
+
+                #bins, *(seed_hash, height))
                 #r64 = list(r64)
-                hex_hash =  list(hex_hash)
-                found_nonce_index = np.where(r64  < target)[0][0] + progress
-                nonce = found_nonce_index + progress
-                print(f"nonce : {nonce}")
+                #hex_hash =  list(hex_hash)
+                #found_nonce_index = np.where(r64  < target)[0][0] + progress
+                #nonce = found_nonce_index + progress
+                print(f"nonce : {hex(nonce)}")
                 print("Submitting nonce")
-                hex_hash = hex_hash[found_nonce_index]
+
+                print('Submitting hash: {}'.format(hex_hash))
+                #hex_hash = hex_hash[found_nonce_index]
                 if nicehash:
                     nonce = struct.unpack('I', bins[39:43])[0]
                 submit = {
@@ -164,7 +166,6 @@ def worker(q, s):
                     },
                     'id':1
                 }
-                print('Submitting hash: {}'.format(hex_hash))
                 s.sendall(str(json.dumps(submit)+'\n').encode('utf-8'))
                 select.select([s], [], [], 3)
                 if not q.empty():
