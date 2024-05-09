@@ -125,6 +125,7 @@ def worker(q, s):
         range_bits = 2 ** 20
         progress = 0
         nonces = range(1, range_bits)
+        hash = None
         while 1:
             bins = map(pack_nonce, nonces)
             if cnv > 5:
