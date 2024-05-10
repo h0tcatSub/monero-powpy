@@ -92,7 +92,6 @@ target = None
 def find_hash(hash):
     global target
     return (struct.unpack('Q', hash[24:])[0] - target) < 0
-
 def create_r64(hash):
     print(struct.unpack('Q', hash[24:])[0])
     return struct.unpack('Q', hash[24:])[0]
@@ -118,20 +117,22 @@ def worker(q, s):
         target = struct.unpack('I', binascii.unhexlify(target))[0]
         if target >> 32 == 0:
             target = int(0xFFFFFFFFFFFFFFFF / int(0xFFFFFFFF / target))
-        range_bits = 2 ** 20
+        range_bits = 2 ** 18
         progress = 0
         nonces = range(1, range_bits)
+        print("Start mining")
         while 1:
             bins = map(pack_nonce, nonces)
             hash = map(make_hash, bins)#bins, *(seed_hash, height))
             #else:
             #    hash = map(pycryptonight.cn_slow_hash, bins, cnv, 0, height)
             hash_count += range_bits
-            sys.stdout.write(f"Progress : {hash_count} \r")
+            sys.stdout.write(f"Progress : {hash_count}")
             sys.stdout.flush()
             hex_hash = map(decode_hash, hash)
             r64 = map(find_hash, hash)
-            found_nonce = any(r64)
+            found_nonce = not all(r64)
+            print(found_nonce)
             if found_nonce: #r64 < target:
                 print()
                 elapsed = time.time() - started
@@ -140,7 +141,7 @@ def worker(q, s):
                 print('{}Hashrate: {} H/s'.format(os.linesep, hr))
                 print("Checking Hash...")
                 #r64 = list(map(create_r64, hash))
-                r64 = list(r64)
+                #r64 = list(r64)
                 nonce = r64.index(True) + progress
                 bin = pack_nonce(nonce)
                 hex_hash = pyrx.get_rx_hash(bin, seed_hash, height)
@@ -154,7 +155,7 @@ def worker(q, s):
                 print("Submitting nonce")
 
                 print('Submitting hash: {}'.format(hex_hash))
-                #hex_hash = hex_hash[found_nonce_index]
+                hex_hash = hex_hash[found_nonce_index]
                 if nicehash:
                     nonce = struct.unpack('I', bins[39:43])[0]
                 submit = {
